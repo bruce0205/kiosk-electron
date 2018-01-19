@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css" />
+    <script>
+        const { ipcRenderer } = require('electron');
+        window.jQuery = window.$ = require('jquery');
+        require('bootstrap');
+    </script>
+</head>
+
+<body>
+    <div class="jumbotron text-center">
+        <h1>Fontrip Kiosk</h1>
+        <p>請選擇你要核銷的商品與規格</p>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-4">
+                <h3>國立故宮博物院</h3>
+                <img src="https://www.taiwan.net.tw/att/1/big_scenic_spots/pic_74_4.jpg" alt="" height="120" width="200" onclick="openMuseum();">
+            </div>
+            <div class="col-sm-4">
+                <h3>墾丁國家公園</h3>
+                <img src="https://www.taiwan.net.tw/att/1/big_scenic_spots/pic_421_12.jpg" alt="" height="120" width="200" onclick="javascript:alert('hello 墾丁')">
+            </div>
+            <div class="col-sm-4">
+                <h3>101大樓</h3>
+                <img src="http://www.taipei-101.com.tw/upload/jn_now/201404/201404121646556FCG6IA0.jpg" alt="" height="120" width="200" onclick="javascript:alert('hello 101')">
+            </div>
+        </div>
+    </div>
+    <script>
+        function openMuseum() {
+            console.log('hello 故宮');
+            ipcRenderer.send('openMuseum');
+        }
+
+    </script>
+</body>
+
+</html>
