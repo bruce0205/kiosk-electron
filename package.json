@@ -1,22 +1,35 @@
 {
   "name": "kiosk-electron",
-  "version": "1.0.0",
+  "version": "0.0.8",
   "description": "",
-  "main": "index.js",
+  "main": "main.js",
+  "gh_token": "99370451fe6ee4307363fc71ced3a54602b4f0e3",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx build --win --ia32",
+    "publish": "npx build --win --ia32 -p always"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^1.7.10"
+    "electron": "^1.7.10",
+    "electron-builder": "^19.54.0"
   },
   "dependencies": {
     "bootstrap": "^3.3.7",
-    "electron-builder": "^19.54.0",
     "electron-log": "^2.2.14",
-    "electron-updater": "^2.18.2",
-    "jquery": "^3.2.1"
+    "electron-updater": "^2.19.1",
+    "jquery": "^3.2.1",
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2"
+  },
+  "build": {
+    "appId": "com.fontrip.kiosk",
+    "asar": false,
+    "win": {
+      "target": "nsis",
+      "publisherName": "Fontrip Tech., Inc."
+    }
   }
 }

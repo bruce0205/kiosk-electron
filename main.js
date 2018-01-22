@@ -1,12 +1,32 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const url = require('url');
 const path = require('path');
+const rp = require('request-promise');
 let win;
+let accessToken;
+
+const loginRrequestOptions = {
+    method: 'POST',
+    uri: 'https://test-platform.welcometw.com/api/fontrip/kiosk/kioskLogin',
+    body: {
+        some: 'payload'
+    },
+    json: true // Automatically stringifies the body to JSON
+};
+
+const browserWindowOptions = {
+    // width: 800, height: 600,
+    // fullscreen: true,
+    kiosk: true,
+}
 
 function createMain() {
     if (!win) {
-        win = new BrowserWindow({
-            width: 800, height: 600,
+        win = new BrowserWindow(browserWindowOptions);
+
+        // TODO get accessToken
+        win.on('show', () => {
+
         });
 
         win.on('closed', () => {
@@ -44,9 +64,7 @@ ipcMain.on('openMain', (event, arg) => {
 
 ipcMain.on('openMuseum', (event, arg) => {
     if (!win) {
-        win = new BrowserWindow({
-            width: 800, height: 600,
-        });
+        win = new BrowserWindow(browserWindowOptions);
 
         win.on('closed', () => {
             win = null;
@@ -61,9 +79,7 @@ ipcMain.on('openMuseum', (event, arg) => {
 
 ipcMain.on('openMuseumSuccess', (event, arg) => {
     if (!win) {
-        win = new BrowserWindow({
-            width: 800, height: 600,
-        });
+        win = new BrowserWindow(browserWindowOptions);
 
         win.on('closed', () => {
             win = null;
@@ -74,4 +90,23 @@ ipcMain.on('openMuseumSuccess', (event, arg) => {
         protocol: 'file',
         slashes: true
     }));
+});
+
+ipcMain.on('openMuseumFail', (event, arg) => {
+    if (!win) {
+        win = new BrowserWindow(browserWindowOptions);
+
+        win.on('closed', () => {
+            win = null;
+        });
+    }
+    win.loadURL(url.format({
+        pathname: path.join(__dirname, 'product', 'museum-fail.html'),
+        protocol: 'file',
+        slashes: true
+    }));
+});
+
+ipcMain.on('quitApp', (event, arg) => {
+    app.quit();
 });

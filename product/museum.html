@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css" />
     <script>
         const { ipcRenderer } = require('electron');
+        const remote = require('electron').remote;
         window.jQuery = window.$ = require('jquery');
         require('bootstrap');
     </script>
@@ -16,7 +17,8 @@
 
 <body>
     <div class="jumbotron text-center">
-        <img style="position: relative; float:right" src="https://image.flaticon.com/icons/png/512/25/25694.png" alt="" height="40" width="40" onclick="openMain();">
+        <img style="position: relative; float:right" src="https://image.flaticon.com/icons/png/512/25/25694.png" alt="" height="40"
+            width="40" onclick="openMain();">
         <h1>好玩卡或QR Code入場</h1>
         <p>Resize this responsive page to see the effect!</p>
     </div>
@@ -25,22 +27,103 @@
         <div class="row">
             <div class="col-sm-4">
                 <h3>國立故宮博物院</h3>
-                <img src="https://www.taiwan.net.tw/att/1/big_scenic_spots/pic_74_4.jpg" alt="" height="120" width="200" onclick="openMuseumSuccess();">
+                <img src="https://www.taiwan.net.tw/att/1/big_scenic_spots/pic_74_4.jpg" alt="" height="180" width="320">
             </div>
             <div class="col-sm-4">
                 <h3>北北基好玩卡</h3>
-                <img src="../assets/image/nfc.png" alt="" height="120" width="200" onclick="openMuseum();">
+                <img src="../assets/image/nfc.png" alt="" height="180" width="320">
             </div>
             <div class="col-sm-4">
                 <h3>QR Code</h3>
-                <img src="../assets/image/qrcode.jpg" alt="" height="120" width="200" onclick="openMuseum();">
+                <img src="../assets/image/qrcode.jpg" alt="" height="180" width="320">
             </div>
         </div>
     </div>
     <script>
+        function openMain() {
+            ipcRenderer.send('openMain');
+        }
         function openMuseumSuccess() {
             ipcRenderer.send('openMuseumSuccess');
         }
+        function openMuseumFail() {
+            ipcRenderer.send('openMuseumFail');
+        }
+
+        var websocket_connected = false;
+        var url = 'https://test-platform.welcometw.com/api/fontrip/kiosk/kioskProductOrderRedeem';
+        var header = {
+            'Content-Type': 'application/json',
+            'key': '779473641250',
+            'secret': '4yXnWw4ggccCxA8482wJ'
+        }
+        var body = {
+            "basic": {
+                "appName": "kiosk",
+                "appVersion": "0.5",
+                "lang": "zh_TW",
+                "os": "kiosk",
+                "deviceId": "kiosktest",
+                "latitude": "25.00",
+                "longitude": "123.21"
+            },
+            "request": {
+                "accessToken": "6t7OBxevTDb21jC8dNz7Ez5Re9LMD1",
+                "accountCode": "ST64386174",
+                "type": "QRCODE",
+                "code": "8206931102306121",
+                "expiredRedeemMode": "NO",
+                "productId": "NPM_TICKET",
+                "productSpecId": "",
+                "bookingSpecId": ""
+            }
+        }
+
+        function vbar_open() {
+            if (!websocket_connected) {
+                var host = "ws://localhost:2693";
+                websocketData = new WebSocket(host, 'data');
+
+                websocketData.onopen = function (evt) {
+                    console.log('websocket connection success');
+                    websocket_connected = true;
+                }
+
+                websocketData.onmessage = function (evt) {
+                    console.log('event.data : ' + evt.data);
+
+                    fetch(url, {
+                        method: 'POST',
+                        body: JSON.stringify(body),
+                        headers: new Headers(header)
+                    }).then((response) => {
+                        return response.json();
+                    }).then((data) => {
+                        console.log('response.success : ' + data.response.success);
+                        console.log('response.message : ' + data.response.message);
+                        if (data.response.success) {
+                            ipcRenderer.send('openMuseumSuccess');
+                        } else {
+                            ipcRenderer.send('openMuseumFail');
+                        }
+                    }).catch((err) => {
+                        console.error(err);
+                    });
+                }
+            }
+            setTimeout("vbar_open()", 3000);
+        }
+        $(document).ready(function () {
+            vbar_open();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.which === 123) { // F12
+                remote.getCurrentWindow().webContents.openDevTools();
+            } else if (e.which === 116) { // F5
+                location.reload();
+            }
+        })
     </script>
 </body>
 
