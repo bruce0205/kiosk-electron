@@ -13,6 +13,28 @@
         window.jQuery = window.$ = require('jquery');
         require('bootstrap');
     </script>
+    <style>
+        #wrapper {
+            position: absolute;
+            left: 0;
+        }
+
+        #resultSpan {
+            font-size: 24px;
+            color: #999;
+            font-weight: bold;
+            float: right;
+        }
+
+        #resultImg {
+            height: 320px;
+            width: 320px;
+            display: inline;
+            vertical-align: middle;
+            position: absolute;
+            z-index: -1;
+        }
+    </style>
 </head>
 
 <body>
@@ -25,21 +47,22 @@
 
     <div class="container">
         <div class="row">
-            <div class="col-sm-4">
+            <div id="prodDiv" class="col-sm-4">
                 <h3>國立故宮博物院</h3>
-                <img src="https://www.taiwan.net.tw/att/1/big_scenic_spots/pic_74_4.jpg" alt="" height="180" width="320">
+                <img id="prodImg" src="https://www.taiwan.net.tw/att/1/big_scenic_spots/pic_74_4.jpg" alt="" height="180" width="320">
             </div>
-            <div class="col-sm-4">
+            <div id="redeemDiv1" class="col-sm-4">
                 <h3>北北基好玩卡</h3>
-                <img src="../assets/image/nfc.png" alt="" height="180" width="320">
+                <img id='readerImg' src="../assets/image/nfc.png" alt="" height="180" width="320">
             </div>
-            <div class="col-sm-4">
+            <div id="redeemDiv2" class="col-sm-4">
                 <h3>QR Code</h3>
-                <img src="../assets/image/qrcode.jpg" alt="" height="180" width="320">
+                <img id='scannerImg' src="../assets/image/qrcode.jpg" alt="" height="180" width="320">
             </div>
         </div>
     </div>
     <script>
+
         function openMain() {
             ipcRenderer.send('openMain');
         }
@@ -68,7 +91,7 @@
                 "longitude": "123.21"
             },
             "request": {
-                "accessToken": "6t7OBxevTDb21jC8dNz7Ez5Re9LMD1",
+                "accessToken": "",
                 "accountCode": "ST64386174",
                 "type": "QRCODE",
                 "code": "8206931102306121",
@@ -90,7 +113,8 @@
                 }
 
                 websocketData.onmessage = function (evt) {
-                    console.log('event.data : ' + evt.data);
+                    console.log('event.data : ' + evt);
+                    body.accessToken = remote.getGlobal('sharedObj').accessToken;
 
                     fetch(url, {
                         method: 'POST',
@@ -101,11 +125,8 @@
                     }).then((data) => {
                         console.log('response.success : ' + data.response.success);
                         console.log('response.message : ' + data.response.message);
-                        if (data.response.success) {
-                            ipcRenderer.send('openMuseumSuccess');
-                        } else {
-                            ipcRenderer.send('openMuseumFail');
-                        }
+
+                        loadResult('reader', data);
                     }).catch((err) => {
                         console.error(err);
                     });
@@ -113,8 +134,117 @@
             }
             setTimeout("vbar_open()", 3000);
         }
+
+        /**
+         * after redeemed, render "result" view
+         * @param {string} redeemType - nfc reader or qr code scanner
+         * @param {object} data - redeem result
+        */
+        function loadResult(redeemType, data) {
+            var typeImgSrc, resultImgSrc;
+            var h3Text;
+
+            switch (redeemType) {
+                case "reader":
+                    typeImgSrc = '../assets/image/nfc.png';
+                    h3Text = '北北基好玩卡';
+                    break;
+                case "scanner":
+                    typeImgSrc = '../assets/image/qrcode.jpg';
+                    h3Text = 'QR Code';
+                    break;
+                default:
+            }
+            if (data.response.success) {
+                resultImgSrc = '../assets/image/success.jpg';
+            } else {
+                resultImgSrc = '../assets/image/fail.jpg';
+            }
+
+            // step 0 : clear data
+            $('#redeemDiv1').html('');
+            $('#redeemDiv2').html('');
+
+            // step 1 : render redeemType@redeemDiv1
+            var h3 = $('<h3>').append(h3Text);
+            var typeImg = $('<img>').attr({
+                src: typeImgSrc,
+                height: "180",
+                width: "320"
+            });
+            $("#redeemDiv1").append(h3).append(typeImg);
+
+            // step 2 : render reddemResult@redeemDiv2
+            var wrapperDiv = $('<div>').attr({
+                id: "wrapper"
+            })
+            var resultImg = $('<img>').attr({
+                id: 'resultImg',
+                src: resultImgSrc,
+            });
+            var resultSpan = $('<span>').attr({
+                id: 'resultSpan'
+            });
+            resultSpan.append(data.response.msg);
+
+            wrapperDiv.append(resultImg);
+            for (var i = 1; i <= 12; i++) {
+                wrapperDiv.append($('<br>'));
+            }
+            wrapperDiv.append('&nbsp;&nbsp;&nbsp;').append(resultSpan);
+            $("#redeemDiv2").append(wrapperDiv);
+
+            // step 4 : reset result view
+            loadReset();
+        }
+
+        function loadReset() {
+            setTimeout(() => {
+                // step 0 : clean
+                $('#redeemDiv1').html('');
+                $('#redeemDiv2').html('');
+
+                // step 1 : reset reader
+                var readerH3 = $('<h3>').append('北北基好玩卡');
+                var readerImg = $('<img>').attr({
+                    id: 'readerImg',
+                    src: '../assets/image/nfc.png',
+                    height: "180",
+                    width: "320"
+                });
+                $("#redeemDiv1").append(readerH3).append(readerImg);
+
+                // step 2 : reset scanner
+                var scannerH3 = $('<h3>').append('QR Code');
+                var scannerImg = $('<img>').attr({
+                    id: 'scannerImg',
+                    src: '../assets/image/qrcode.jpg',
+                    height: "180",
+                    width: "320"
+                });
+                $("#redeemDiv2").append(scannerH3).append(scannerImg);
+            }, 1000);
+        }
+
         $(document).ready(function () {
-            vbar_open();
+            console.log('accessToken : ' + remote.getGlobal('sharedObj').accessToken);
+            // vbar_open();
+            $("#prodImg").on('click', (event, args) => {
+                var data = {
+                    "result": {
+                        "redeemErrorMsg": "兌換時間:2018-01-19 17:57"
+                    },
+                    "response": {
+                        "success": false,
+                        "msg": "商品訂單已核銷(#13484-1390205)",
+                        "debugMsg": "",
+                        "apiLogId": 1390205,
+                        "errorCode": 13484
+                    },
+                    "header": null
+                }
+                loadResult('scanner', data);
+            });
         });
 
         document.addEventListener('keydown', (e) => {
