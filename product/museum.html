@@ -93,8 +93,8 @@
             "request": {
                 "accessToken": "",
                 "accountCode": "ST64386174",
-                "type": "QRCODE",
-                "code": "8206931102306121",
+                "type": "", // SMART_CARD | QRCODE
+                "code": "",
                 "expiredRedeemMode": "NO",
                 "productId": "NPM_TICKET",
                 "productSpecId": "",
@@ -113,8 +113,17 @@
                 }
 
                 websocketData.onmessage = function (evt) {
-                    console.log('event.data : ' + evt);
-                    body.accessToken = remote.getGlobal('sharedObj').accessToken;
+                    console.log('event.data : ' + evt.data);
+                    let code = evt.data.toUpperCase();
+
+                    body.request.accessToken = remote.getGlobal('sharedObj').accessToken;
+                    body.request.code = code;
+                    if (code.startsWith('~')) {
+                        body.request.type = 'SMART_CARD';
+                        body.request.code = code.substring(code.indexOf('~') + 1);
+                    } else {
+                        body.request.type = 'QRCODE';
+                    }
 
                     fetch(url, {
                         method: 'POST',
@@ -123,10 +132,7 @@
                     }).then((response) => {
                         return response.json();
                     }).then((data) => {
-                        console.log('response.success : ' + data.response.success);
-                        console.log('response.message : ' + data.response.message);
-
-                        loadResult('reader', data);
+                        loadResult(body.request.type, data);
                     }).catch((err) => {
                         console.error(err);
                     });
@@ -143,13 +149,14 @@
         function loadResult(redeemType, data) {
             var typeImgSrc, resultImgSrc;
             var h3Text;
+            console.log('redeemType : ' + redeemType);
 
             switch (redeemType) {
-                case "reader":
+                case "SMART_CARD":
                     typeImgSrc = '../assets/image/nfc.png';
                     h3Text = '北北基好玩卡';
                     break;
-                case "scanner":
+                case "QRCODE":
                     typeImgSrc = '../assets/image/qrcode.jpg';
                     h3Text = 'QR Code';
                     break;
@@ -228,23 +235,7 @@
 
         $(document).ready(function () {
             console.log('accessToken : ' + remote.getGlobal('sharedObj').accessToken);
-            // vbar_open();
-            $("#prodImg").on('click', (event, args) => {
-                var data = {
-                    "result": {
-                        "redeemErrorMsg": "兌換時間:2018-01-19 17:57"
-                    },
-                    "response": {
-                        "success": false,
-                        "msg": "商品訂單已核銷(#13484-1390205)",
-                        "debugMsg": "",
-                        "apiLogId": 1390205,
-                        "errorCode": 13484
-                    },
-                    "header": null
-                }
-                loadResult('scanner', data);
-            });
+            vbar_open();
         });
 
         document.addEventListener('keydown', (e) => {

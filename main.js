@@ -36,8 +36,8 @@ const loginRrequestOptions = {
 
 const browserWindowOptions = {
     // width: 800, height: 600,
-    fullscreen: true,
-    // kiosk: true,
+    // fullscreen: true,
+    kiosk: true,
 }
 
 function createMain() {

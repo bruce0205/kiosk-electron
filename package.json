@@ -1,9 +1,9 @@
 {
   "name": "kiosk-electron",
-  "version": "0.0.8",
+  "version": "0.0.18",
   "description": "",
   "main": "main.js",
-  "gh_token": "99370451fe6ee4307363fc71ced3a54602b4f0e3",
+  "gh_token": "c6559d70afb62463557f4c2b69c89ffe4ebbd59c",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npx build --win --ia32",
